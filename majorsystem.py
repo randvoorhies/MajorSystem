@@ -47,7 +47,7 @@ consonants = [
   'Z',
   'ZH']
 
-major_system = {
+majorsystem = {
     0 : ['S', 'Z'],
     1 : ['T', 'D'],
     2 : ['N'],
@@ -103,10 +103,6 @@ def read_pronunciation(filename):
 
     return words
 
-
-    # Return the words as a dictionary with the word as the key, and an array of the phonemes as the value
-    #return dict((line[:line.find(' ')].lower(), line[line.find(' '):].strip().split(' ')) for line in lines)
-
 ######################################################################
 def get_words():
   pronunciations   = read_pronunciation('cmudict.0.7a.txt')
@@ -127,9 +123,28 @@ def get_words():
 
   return words
 
-words = get_words()
+######################################################################
+def find_sequence(num, words):
+  sequences = []
+
+  # Create our list of possible sequences by starting with the first number
+  for word in words:
+    if words[word]['pronunciation'][0] in majorsystem[num[0]]:
+      sequences.append(
+          {
+            'words' : [word],
+            'pronunciation' : words[word]['pronunciation'],
+            'index' : 0
+          }
+          )
+
+  return sequences
 
 
-pprint.pprint(words)
+
+
+#words = get_words()
+#pprint.pprint(words)
+#print len(words)
 
 
