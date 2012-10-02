@@ -88,7 +88,7 @@ def read_pronunciation(filename):
 
     lines = f.read().split('\n')
 
-     # Filter out lines that don't start with A-Z
+    # Filter out lines that don't start with A-Z
     lines = filter(lambda x: len(x) and ord(x[0]) > 64 and ord(x[0]) < 91 , lines)
 
     # Filter out lines that have an apostrophe in them
@@ -98,6 +98,7 @@ def read_pronunciation(filename):
     for line in lines:
       i = line.find(' ')
       word = line[:i].lower()
+
       pronunciation = line[i:].strip().split(' ')
       words[word] = [p.strip('0123456789') for p in pronunciation]
 
@@ -105,46 +106,93 @@ def read_pronunciation(filename):
 
 ######################################################################
 def get_words():
-  pronunciations   = read_pronunciation('cmudict.0.7a.txt')
-  word_frequencies = read_word_frequencies('wordfrequencies.txt')
+  pronunciations  = read_pronunciation('cmudict.0.7a.txt')
 
   words = {}
-  for word in word_frequencies:
+  for word in pronunciations:
+    # Make sure we don't have any unassigned phonemes
+    if any(x in unassigned for x in pronunciations[word]): continue
 
-    # Make sure we have a pronunciation for this word
-    if pronunciations.has_key(word):
-      pronunciation = pronunciations[word]
+    # Make sure the word has at least one assigned consanant in it.
+    if not any(x in consonants for x in pronunciations[word]): continue
 
-      # If the pronunciation doesn't have any unassigned phonemes in it, then
-      # let's stick it in the word list
-      if not any(x in unassigned for x in pronunciation):
-        words[word] = word_frequencies[word]
-        words[word]['pronunciation'] = pronunciation
-
+    words[word] = {}
+    words[word]['pronunciation'] = pronunciations[word]
   return words
 
-######################################################################
-def find_sequence(num, words):
-  sequences = []
+  #word_frequencies = read_word_frequencies('wordfrequencies.txt')
 
-  # Create our list of possible sequences by starting with the first number
+  #words = {}
+  #for word in word_frequencies:
+
+  #  # Make sure we have a pronunciation for this word
+  #  if pronunciations.has_key(word):
+  #    pronunciation = pronunciations[word]
+
+  #    # If the pronunciation doesn't have any unassigned phonemes in it, then
+  #    # let's stick it in the word list
+  #    if not any(x in unassigned for x in pronunciation):
+  #      words[word] = word_frequencies[word]
+  #      words[word]['pronunciation'] = pronunciation
+
+  #return words
+
+######################################################################
+def eat_word(nums, word):
+  i = 0
+  for p in word['pronunciation']:
+
+    # If we have more phenomes than numbers, then bail out.
+    if i >= len(nums):
+      return None
+
+    if p in vowels:
+      continue
+    elif p in majorsystem[nums[i]]:
+      i += 1
+    else :
+      return None
+
+  return i
+
+######################################################################
+def find_sequence(nums, words):
+  working_sequences = []
+  final_sequences = []
+
   for word in words:
-    if words[word]['pronunciation'][0] in majorsystem[num[0]]:
-      sequences.append(
+    index = eat_word(nums, words[word])
+    if index is not None:
+      working_sequences.append(
           {
             'words' : [word],
-            'pronunciation' : words[word]['pronunciation'],
-            'index' : 0
+            'index' : index
           }
-          )
+        )
 
-  return sequences
+  curr_sequences = []
+  while len(working_sequences) > 0:
+    print '-------------'
+
+    for sequence in working_sequences:
+      for word in words:
+        index = eat_word(nums[sequence['index']:], words[word])
+
+        if index is not None:
+          print 'Sequence: ', sequence, '[', word, '] index=', index
+          sequence['index'] += index
+          sequence['words'] += word
+          if index == len(nums):
+            final_sequences.append(sequence)
+          else:
+            curr_sequences.append(sequence)
+
+    working_sequences = curr_sequences
 
 
-
+  return working_sequences
 
 #words = get_words()
-#pprint.pprint(words)
-#print len(words)
-
-
+#print words['bob']
+#sequences = find_sequence([9, 9], words)
+#pprint.pprint(sequences)
