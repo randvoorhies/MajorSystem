@@ -129,7 +129,7 @@ def get_words():
   words = {}
   for word in word_frequencies:
 
-    if len(word) < 4: continue
+    if len(word) < 3: continue
 
     # Make sure we have a pronunciation for this word
     if pronunciations.has_key(word):
@@ -166,6 +166,19 @@ def eat_word(nums, word):
   return i
 
 ######################################################################
+def remove_duplicate_sequences(sequences):
+  unique_sequences = []
+  for sequence in sequences:
+    found = False
+    for unique_sequence in unique_sequences:
+      if sequence == unique_sequence:
+        found = True
+        break;
+    if not found:
+      unique_sequences.append(sequence)
+  return unique_sequences
+
+######################################################################
 def find_sequence(nums, words):
   working_sequences = []
   final_sequences = []
@@ -182,25 +195,20 @@ def find_sequence(nums, words):
 
   curr_sequences = []
   while len(working_sequences) > 0:
+    working_sequences = remove_duplicate_sequences(working_sequences)
 
     curr_sequences = []
     for sequence in working_sequences:
 
       if sequence['index'] == len(nums):
-        final_sequences.append(sequence)
-        print 'Final Sequence:', sequence
+        final_sequences.append(sequence['words'])
         continue
 
       for word in words:
 
-        if len(word) < 3:
-          print 'SUCCCKKK', word
-          exit(-1)
-
         index = eat_word(nums[sequence['index']:], words[word])
 
         if index is not None:
-          print 'Adding word:', word, sequence['words']
           sequence['index'] += index
           sequence['words'].append(word)
           curr_sequences.append(sequence)
@@ -212,5 +220,5 @@ def find_sequence(nums, words):
 
 if __name__ == "__main__":
   words = get_words()
-  sequences = find_sequence([9, 3, 9, 1], words)
+  sequences = find_sequence([3,3,3], words)
   pprint.pprint(sequences)
