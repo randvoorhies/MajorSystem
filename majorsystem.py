@@ -108,34 +108,44 @@ def read_pronunciation(filename):
 def get_words():
   pronunciations  = read_pronunciation('cmudict.0.7a.txt')
 
-  words = {}
-  for word in pronunciations:
-    # Make sure we don't have any unassigned phonemes
-    if any(x in unassigned for x in pronunciations[word]): continue
-
-    # Make sure the word has at least one assigned consanant in it.
-    if not any(x in consonants for x in pronunciations[word]): continue
-
-    words[word] = {}
-    words[word]['pronunciation'] = pronunciations[word]
-  return words
-
-  #word_frequencies = read_word_frequencies('wordfrequencies.txt')
-
   #words = {}
-  #for word in word_frequencies:
+  #for word in pronunciations:
+  #  # Make sure we don't have any unassigned phonemes
+  #  if any(x in unassigned for x in pronunciations[word]): continue
 
-  #  # Make sure we have a pronunciation for this word
-  #  if pronunciations.has_key(word):
-  #    pronunciation = pronunciations[word]
+  #  # Make sure the word has at least one assigned consanant in it.
+  #  if not any(x in consonants for x in pronunciations[word]): continue
 
-  #    # If the pronunciation doesn't have any unassigned phonemes in it, then
-  #    # let's stick it in the word list
-  #    if not any(x in unassigned for x in pronunciation):
-  #      words[word] = word_frequencies[word]
-  #      words[word]['pronunciation'] = pronunciation
+  #  # Get rid of small words
+  #  if len(word) < 3: continue
+
+  #  words[word] = {}
+  #  words[word]['pronunciation'] = pronunciations[word]
 
   #return words
+
+  word_frequencies = read_word_frequencies('wordfrequencies.txt')
+
+  words = {}
+  for word in word_frequencies:
+
+    if len(word) < 4: continue
+
+    # Make sure we have a pronunciation for this word
+    if pronunciations.has_key(word):
+      pronunciation = pronunciations[word]
+
+      # Make sure the word has at least one assigned consanant in it.
+      if not any(x in consonants for x in pronunciation): continue
+
+
+      # If the pronunciation doesn't have any unassigned phonemes in it, then
+      # let's stick it in the word list
+      if not any(x in unassigned for x in pronunciation):
+        words[word] = word_frequencies[word]
+        words[word]['pronunciation'] = pronunciation
+
+  return words
 
 ######################################################################
 def eat_word(nums, word):
@@ -172,27 +182,35 @@ def find_sequence(nums, words):
 
   curr_sequences = []
   while len(working_sequences) > 0:
-    print '-------------'
 
+    curr_sequences = []
     for sequence in working_sequences:
+
+      if sequence['index'] == len(nums):
+        final_sequences.append(sequence)
+        print 'Final Sequence:', sequence
+        continue
+
       for word in words:
+
+        if len(word) < 3:
+          print 'SUCCCKKK', word
+          exit(-1)
+
         index = eat_word(nums[sequence['index']:], words[word])
 
         if index is not None:
-          print 'Sequence: ', sequence, '[', word, '] index=', index
+          print 'Adding word:', word, sequence['words']
           sequence['index'] += index
-          sequence['words'] += word
-          if index == len(nums):
-            final_sequences.append(sequence)
-          else:
-            curr_sequences.append(sequence)
+          sequence['words'].append(word)
+          curr_sequences.append(sequence)
 
     working_sequences = curr_sequences
 
 
-  return working_sequences
+  return final_sequences
 
-#words = get_words()
-#print words['bob']
-#sequences = find_sequence([9, 9], words)
-#pprint.pprint(sequences)
+if __name__ == "__main__":
+  words = get_words()
+  sequences = find_sequence([9, 3, 9, 1], words)
+  pprint.pprint(sequences)
